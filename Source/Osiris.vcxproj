@@ -119,10 +119,8 @@
     <ClCompile Include="Hacks\Backtrack.cpp" />
     <ClCompile Include="Hacks\Chams.cpp" />
     <ClCompile Include="Hacks\EnginePrediction.cpp" />
-    <ClCompile Include="Hacks\Glow.cpp" />
     <ClCompile Include="Hacks\Sound.cpp" />
     <ClCompile Include="Hacks\StreamProofESP.cpp" />
-    <ClCompile Include="Hacks\Triggerbot.cpp" />
     <ClCompile Include="Hacks\Visuals.cpp" />
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Helpers\PatternFinder.cpp">
@@ -209,11 +207,9 @@
     <ClInclude Include="Hacks\Chams.h" />
     <ClInclude Include="Hacks\EnginePrediction.h" />
     <ClInclude Include="Hacks\Features.h" />
-    <ClInclude Include="Hacks\Glow.h" />
     <ClInclude Include="Hacks\Misc.h" />
     <ClInclude Include="Hacks\Sound.h" />
     <ClInclude Include="Hacks\StreamProofESP.h" />
-    <ClInclude Include="Hacks\Triggerbot.h" />
     <ClInclude Include="Hacks\Visuals.h" />
     <ClInclude Include="Hacks\Visuals\ColorCorrection.h" />
     <ClInclude Include="Hacks\Visuals\PostProcessingDisabler.h" />

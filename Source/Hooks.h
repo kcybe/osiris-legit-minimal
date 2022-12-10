@@ -25,7 +25,6 @@ struct ModelRenderInfo;
 struct SoundInfo;
 class ClientInterfaces;
 class OtherInterfaces;
-class Glow;
 class Visuals;
 class Misc;
 
@@ -54,7 +53,7 @@ public:
 #endif
 
     void install(csgo::pod::Client* clientInterface, const EngineInterfaces& engineInterfaces, const OtherInterfaces& interfaces, const Memory& memory) noexcept;
-    void uninstall(Misc& misc, Glow& glow, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger) noexcept;
+    void uninstall(Misc& misc, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger) noexcept;
     void callOriginalDrawModelExecute(void* ctx, void* state, const ModelRenderInfo& info, matrix3x4* customBoneToWorld) noexcept;
 
     std::add_pointer_t<int FASTCALL_CONV(SoundInfo&)> originalDispatchSound;

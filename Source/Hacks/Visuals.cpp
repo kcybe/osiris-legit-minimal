@@ -55,10 +55,6 @@ struct VisualsConfig {
     float brightness{ 0.0f };
     ColorToggle3 world;
     ColorToggle3 sky;
-    bool deagleSpinner{ false };
-    int screenEffect{ 0 };
-    int hitEffect{ 0 };
-    float hitEffectTime{ 0.6f };
     int hitMarker{ 0 };
     float hitMarkerTime{ 0.6f };
     BulletTracers bulletTracers;
@@ -83,10 +79,6 @@ static void from_json(const json& j, VisualsConfig& v)
     read(j, "Brightness", v.brightness);
     read<value_t::object>(j, "World", v.world);
     read<value_t::object>(j, "Sky", v.sky);
-    read(j, "Deagle spinner", v.deagleSpinner);
-    read(j, "Screen effect", v.screenEffect);
-    read(j, "Hit effect", v.hitEffect);
-    read(j, "Hit effect time", v.hitEffectTime);
     read(j, "Hit marker", v.hitMarker);
     read(j, "Hit marker time", v.hitMarkerTime);
     read<value_t::object>(j, "Bullet Tracers", v.bulletTracers);
@@ -113,10 +105,6 @@ static void to_json(json& j, VisualsConfig& o)
     WRITE("Brightness", brightness);
     WRITE("World", world);
     WRITE("Sky", sky);
-    WRITE("Deagle spinner", deagleSpinner);
-    WRITE("Screen effect", screenEffect);
-    WRITE("Hit effect", hitEffect);
-    WRITE("Hit effect time", hitEffectTime);
     WRITE("Hit marker", hitMarker);
     WRITE("Hit marker time", hitMarkerTime);
     WRITE("Bullet Tracers", bulletTracers);
@@ -126,11 +114,6 @@ static void to_json(json& j, VisualsConfig& o)
 bool Visuals::isZoomOn() noexcept
 {
     return zoom;
-}
-
-bool Visuals::isDeagleSpinnerOn() noexcept
-{
-    return visualsConfig.deagleSpinner;
 }
 
 bool Visuals::shouldRemoveFog() noexcept
@@ -325,80 +308,6 @@ void Visuals::applyZoom(csgo::FrameStage stage) noexcept
 }
 #endif
 
-void Visuals::applyScreenEffects() noexcept
-{
-    if (!visualsConfig.screenEffect)
-        return;
-
-    const auto material = Material::from(retSpoofGadgets->client, interfaces.getMaterialSystem().findMaterial([] {
-        constexpr std::array effects{
-            "effects/dronecam",
-            "effects/underwater_overlay",
-            "effects/healthboost",
-            "effects/dangerzone_screen"
-        };
-
-        if (visualsConfig.screenEffect <= 2 || static_cast<std::size_t>(visualsConfig.screenEffect - 2) >= effects.size())
-            return effects[0];
-        return effects[visualsConfig.screenEffect - 2];
-    }()));
-
-    if (visualsConfig.screenEffect == 1)
-        MaterialVar::from(retSpoofGadgets->client, material.findVar("$c0_x")).setValue(0.0f);
-    else if (visualsConfig.screenEffect == 2)
-        MaterialVar::from(retSpoofGadgets->client, material.findVar("$c0_x")).setValue(0.1f);
-    else if (visualsConfig.screenEffect >= 4)
-        MaterialVar::from(retSpoofGadgets->client, material.findVar("$c0_x")).setValue(1.0f);
-
-#if IS_WIN32()
-    const auto pod = material.getPOD();
-    const auto engine = engineInterfaces.getEngine();
-    DRAW_SCREEN_EFFECT(pod, memory, engine)
-#endif
-}
-
-void Visuals::hitEffect(const GameEvent* event) noexcept
-{
-    if (visualsConfig.hitEffect && localPlayer) {
-        static float lastHitTime = 0.0f;
-
-        if (event && engineInterfaces.getEngine().getPlayerForUserID(event->getInt("attacker")) == localPlayer.get().getNetworkable().index()) {
-            lastHitTime = memory.globalVars->realtime;
-            return;
-        }
-
-        if (lastHitTime + visualsConfig.hitEffectTime >= memory.globalVars->realtime) {
-            constexpr auto getEffectMaterial = [] {
-                static constexpr const char* effects[]{
-                "effects/dronecam",
-                "effects/underwater_overlay",
-                "effects/healthboost",
-                "effects/dangerzone_screen"
-                };
-
-                if (visualsConfig.hitEffect <= 2)
-                    return effects[0];
-                return effects[visualsConfig.hitEffect - 2];
-            };
-
-           
-            auto material = Material::from(retSpoofGadgets->client, interfaces.getMaterialSystem().findMaterial(getEffectMaterial()));
-            if (visualsConfig.hitEffect == 1)
-                MaterialVar::from(retSpoofGadgets->client, material.findVar("$c0_x")).setValue(0.0f);
-            else if (visualsConfig.hitEffect == 2)
-                MaterialVar::from(retSpoofGadgets->client, material.findVar("$c0_x")).setValue(0.1f);
-            else if (visualsConfig.hitEffect >= 4)
-                MaterialVar::from(retSpoofGadgets->client, material.findVar("$c0_x")).setValue(1.0f);
-
-#if IS_WIN32()
-            const auto pod = material.getPOD();
-            const auto engine = engineInterfaces.getEngine();
-            DRAW_SCREEN_EFFECT(pod, memory, engine)
-#endif
-        }
-    }
-}
-
 void Visuals::hitMarker(const GameEvent* event, ImDrawList* drawList) noexcept
 {
     if (visualsConfig.hitMarker == 0)
@@ -527,51 +436,6 @@ void Visuals::bulletTracer(const GameEvent& event) noexcept
     }
 }
 
-void Visuals::drawMolotovHull(ImDrawList* drawList) noexcept
-{
-    if (!visualsConfig.molotovHull.enabled)
-        return;
-
-    const auto color = Helpers::calculateColor(memory.globalVars->realtime, visualsConfig.molotovHull.asColor4());
-
-    GameData::Lock lock;
-
-    static const auto flameCircumference = [] {
-        std::array<Vector, 72> points;
-        for (std::size_t i = 0; i < points.size(); ++i) {
-            constexpr auto flameRadius = 60.0f; // https://github.com/perilouswithadollarsign/cstrike15_src/blob/f82112a2388b841d72cb62ca48ab1846dfcc11c8/game/server/cstrike15/Effects/inferno.cpp#L889
-            points[i] = Vector{ flameRadius * std::cos(Helpers::deg2rad(i * (360.0f / points.size()))),
-                                flameRadius * std::sin(Helpers::deg2rad(i * (360.0f / points.size()))),
-                                0.0f };
-        }
-        return points;
-    }();
-
-    for (const auto& molotov : GameData::infernos()) {
-        for (const auto& pos : molotov.points) {
-            std::array<ImVec2, flameCircumference.size()> screenPoints;
-            std::size_t count = 0;
-
-            for (const auto& point : flameCircumference) {
-                if (Helpers::worldToScreen(pos + point, screenPoints[count]))
-                    ++count;
-            }
-
-            if (count < 1)
-                continue;
-
-            std::swap(screenPoints[0], *std::min_element(screenPoints.begin(), screenPoints.begin() + count, [](const auto& a, const auto& b) { return a.y < b.y || (a.y == b.y && a.x < b.x); }));
-
-            constexpr auto orientation = [](const ImVec2& a, const ImVec2& b, const ImVec2& c) {
-                return (b.x - a.x) * (c.y - a.y) - (c.x - a.x) * (b.y - a.y);
-            };
-
-            std::sort(screenPoints.begin() + 1, screenPoints.begin() + count, [&](const auto& a, const auto& b) { return orientation(screenPoints[0], a, b) > 0.0f; });
-            drawList->AddConvexPolyFilled(screenPoints.data(), count, color);
-        }
-    }
-}
-
 void Visuals::setDrawColorHook(ReturnAddress hookReturnAddress, int& alpha) const noexcept
 {
     scopeOverlayRemover.setDrawColorHook(hookReturnAddress, alpha);
@@ -696,10 +560,6 @@ void Visuals::drawGUI(bool contentOnly) noexcept
     ImGui::Combo("Skybox", &skyboxChanger.skybox, SkyboxChanger::skyboxList.data(), SkyboxChanger::skyboxList.size());
     ImGuiCustom::colorPicker("World color", visualsConfig.world);
     ImGuiCustom::colorPicker("Sky color", visualsConfig.sky);
-    ImGui::Checkbox("Deagle spinner", &visualsConfig.deagleSpinner);
-    ImGui::Combo("Screen effect", &visualsConfig.screenEffect, "None\0Drone cam\0Drone cam with noise\0Underwater\0Healthboost\0Dangerzone\0");
-    ImGui::Combo("Hit effect", &visualsConfig.hitEffect, "None\0Drone cam\0Drone cam with noise\0Underwater\0Healthboost\0Dangerzone\0");
-    ImGui::SliderFloat("Hit effect time", &visualsConfig.hitEffectTime, 0.1f, 1.5f, "%.2fs");
     ImGui::Combo("Hit marker", &visualsConfig.hitMarker, "None\0Default (Cross)\0");
     ImGui::SliderFloat("Hit marker time", &visualsConfig.hitMarkerTime, 0.1f, 1.5f, "%.2fs");
     ImGuiCustom::colorPicker("Bullet Tracers", visualsConfig.bulletTracers.asColor4().color.data(), &visualsConfig.bulletTracers.asColor4().color[3], nullptr, nullptr, &visualsConfig.bulletTracers.enabled);

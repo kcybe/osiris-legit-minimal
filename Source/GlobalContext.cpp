@@ -22,11 +22,9 @@
 #include "Hacks/Backtrack.h"
 #include "Hacks/Chams.h"
 #include "Hacks/EnginePrediction.h"
-#include "Hacks/Glow.h"
 #include "Hacks/Misc.h"
 #include "Hacks/Sound.h"
 #include "Hacks/StreamProofESP.h"
-#include "Hacks/Triggerbot.h"
 #include "Hacks/Visuals.h"
 #include "SDK/ClientClass.h"
 #include "SDK/Constants/ClassId.h"
@@ -84,31 +82,19 @@ bool GlobalContext::createMoveHook(float inputSampleTime, UserCmd* cmd)
     memory->globalVars->serverTime(cmd);
     features->misc.nadePredict();
     features->misc.antiAfkKick(cmd);
-    features->misc.fastStop(cmd);
-    features->misc.prepareRevolver(getEngineInterfaces().getEngine(), cmd);
     features->visuals.removeShadows();
     features->misc.runReportbot(getEngineInterfaces().getEngine());
     features->misc.bunnyHop(cmd);
-    features->misc.autoStrafe(cmd);
-    features->misc.removeCrouchCooldown(cmd);
-    features->misc.autoPistol(cmd);
-    features->misc.autoReload(cmd);
     features->misc.updateClanTag();
     features->misc.fakeBan(getEngineInterfaces().getEngine());
     features->misc.stealNames(getEngineInterfaces().getEngine());
     features->misc.revealRanks(cmd);
-    features->misc.quickReload(cmd);
     features->misc.fixTabletSignal();
-    features->misc.slowwalk(cmd);
 
     EnginePrediction::run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, *memory, cmd);
 
     features->aimbot.run(features->misc, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *config, *memory, cmd);
-    Triggerbot::run(getEngineInterfaces().engineTrace(), getOtherInterfaces(), *memory, *config, cmd);
     features->backtrack.run(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getEngineInterfaces(), getOtherInterfaces(), *memory, cmd);
-    features->misc.edgejump(cmd);
-    features->misc.moonwalk(cmd);
-    features->misc.fastPlant(getEngineInterfaces().engineTrace(), cmd);
 
     if (!(cmd->buttons & (UserCmd::IN_ATTACK | UserCmd::IN_ATTACK2))) {
         features->misc.chokePackets(getEngineInterfaces().getEngine(), sendPacket);
@@ -143,7 +129,6 @@ void GlobalContext::doPostScreenEffectsHook(void* param)
         features->visuals.reduceFlashEffect();
         features->visuals.updateBrightness();
         features->visuals.remove3dSky();
-        features->glow.render(getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory);
     }
     hooks->clientMode.callOriginal<void, WIN32_LINUX(44, 45)>(param);
 }
@@ -190,7 +175,6 @@ void GlobalContext::frameStageNotifyHook(csgo::FrameStage stage)
         GameData::update(ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getEngineInterfaces(), getOtherInterfaces(), *memory);
 
     if (stage == csgo::FrameStage::RENDER_START) {
-        features->misc.preserveKillfeed();
         features->misc.disablePanoramablur();
         features->visuals.colorWorld();
         features->misc.updateEventListeners(getEngineInterfaces());
@@ -273,8 +257,6 @@ int GlobalContext::dispatchSoundHook(SoundInfo& soundInfo)
 
 void GlobalContext::render2dEffectsPreHudHook(void* viewSetup)
 {
-    features->visuals.applyScreenEffects();
-    features->visuals.hitEffect();
     hooks->viewRender.callOriginal<void, WIN32_LINUX(39, 40)>(viewSetup);
 }
 
@@ -408,7 +390,7 @@ LRESULT GlobalContext::wndProcHook(HWND window, UINT msg, WPARAM wParam, LPARAM 
         ImGui_ImplWin32_Init(window);
 
         features.emplace(createFeatures(*memory, ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getEngineInterfaces(), getOtherInterfaces(), helpers::PatternFinder{ getCodeSection(clientDLL.getView()) }, helpers::PatternFinder{ getCodeSection(engineDLL.getView()) }));
-        config.emplace(features->misc, features->inventoryChanger, features->glow, features->backtrack, features->visuals, getOtherInterfaces(), *memory);
+        config.emplace(features->misc, features->inventoryChanger, features->backtrack, features->visuals, getOtherInterfaces(), *memory);
         gui.emplace();
         hooks->install(clientInterfaces->client, getEngineInterfaces(), getOtherInterfaces(), *memory);
 
@@ -476,7 +458,7 @@ int GlobalContext::pollEventHook(SDL_Event* event)
         ImGui::CreateContext();
 
         features.emplace(createFeatures(*memory, ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getEngineInterfaces(), getOtherInterfaces(), helpers::PatternFinder{ linux_platform::getCodeSection(clientSo.getView()) }, helpers::PatternFinder{ linux_platform::getCodeSection(engineSo.getView()) }));
-        config.emplace(features->misc, features->inventoryChanger, features->glow, features->backtrack, features->visuals, getOtherInterfaces(), *memory);
+        config.emplace(features->misc, features->inventoryChanger, features->backtrack, features->visuals, getOtherInterfaces(), *memory);
         
         gui.emplace();
         hooks->install(clientInterfaces->client, getEngineInterfaces(), getOtherInterfaces(), *memory);
@@ -512,7 +494,7 @@ void GlobalContext::viewModelSequenceNetvarHook(recvProxyData& data, void* outSt
 
     if (localPlayer && ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }.getEntityList().getEntityFromHandle(viewModel.owner()) == localPlayer.get().getPOD()) {
         if (const auto weapon = Entity::from(retSpoofGadgets->client, ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }.getEntityList().getEntityFromHandle(viewModel.weapon())); weapon.getPOD() != nullptr) {
-            if (features->visuals.isDeagleSpinnerOn() && weapon.getNetworkable().getClientClass()->classId == ClassId::Deagle && data.value._int == 7)
+            if (weapon.getNetworkable().getClientClass()->classId == ClassId::Deagle && data.value._int == 7)
                 data.value._int = 8;
 
             features->inventoryChanger.fixKnifeAnimation(weapon, data.value._int);
@@ -544,7 +526,6 @@ void GlobalContext::fireGameEventCallback(csgo::pod::GameEvent* eventPointer)
     switch (fnv::hashRuntime(event.getName())) {
     case fnv::hash("round_start"):
         GameData::clearProjectileList();
-        features->misc.preserveKillfeed(true);
         [[fallthrough]];
     case fnv::hash("round_freeze_end"):
         features->misc.purchaseList(getEngineInterfaces().getEngine(), &event);
@@ -557,7 +538,6 @@ void GlobalContext::fireGameEventCallback(csgo::pod::GameEvent* eventPointer)
         break;
     case fnv::hash("player_hurt"):
         features->misc.playHitSound(getEngineInterfaces().getEngine(), event);
-        features->visuals.hitEffect(&event);
         features->visuals.hitMarker(&event);
         break;
     case fnv::hash("vote_cast"):
@@ -584,25 +564,21 @@ void GlobalContext::renderFrame()
         features->misc.purchaseList(getEngineInterfaces().getEngine());
         features->misc.noscopeCrosshair(ImGui::GetBackgroundDrawList());
         features->misc.recoilCrosshair(ImGui::GetBackgroundDrawList());
-        features->misc.drawOffscreenEnemies(getEngineInterfaces().getEngine(), ImGui::GetBackgroundDrawList());
         features->misc.drawBombTimer();
         features->misc.spectatorList();
         features->visuals.hitMarker(nullptr, ImGui::GetBackgroundDrawList());
-        features->visuals.drawMolotovHull(ImGui::GetBackgroundDrawList());
         features->misc.watermark();
 
         features->aimbot.updateInput(*config);
         features->visuals.updateInput();
         StreamProofESP::updateInput(*config);
         features->misc.updateInput();
-        Triggerbot::updateInput(*config);
         Chams::updateInput(*config);
-        features->glow.updateInput();
 
         gui->handleToggle(features->misc, getOtherInterfaces());
 
         if (gui->isOpen())
-            gui->render(features->misc, features->inventoryChanger, features->glow, features->backtrack, features->visuals, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, *config);
+            gui->render(features->misc, features->inventoryChanger, features->backtrack, features->visuals, getEngineInterfaces(), ClientInterfaces{ retSpoofGadgets->client, *clientInterfaces }, getOtherInterfaces(), *memory, *config);
     }
 
     ImGui::EndFrame();

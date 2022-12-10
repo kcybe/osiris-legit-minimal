@@ -14,7 +14,6 @@ class GameEvent;
 struct ImDrawList;
 struct UserCmd;
 class EngineInterfaces;
-class Glow;
 class Visuals;
 struct DemoPlaybackParameters;
 
@@ -42,21 +41,14 @@ public:
     bool isMenuKeyPressed() noexcept;
     float maxAngleDelta() noexcept;
     float aspectRatio() noexcept;
-
-    void edgejump(UserCmd* cmd) noexcept;
-    void slowwalk(UserCmd* cmd) noexcept;
     void updateClanTag(bool = false) noexcept;
     void spectatorList() noexcept;
     void noscopeCrosshair(ImDrawList* drawlist) noexcept;
     void recoilCrosshair(ImDrawList* drawList) noexcept;
     void watermark() noexcept;
-    void prepareRevolver(const Engine& engine, UserCmd*) noexcept;
-    void fastPlant(const EngineTrace& engineTrace, UserCmd*) noexcept;
-    void fastStop(UserCmd*) noexcept;
     void drawBombTimer() noexcept;
     void stealNames(const Engine& engine) noexcept;
     void disablePanoramablur() noexcept;
-    void quickReload(UserCmd*) noexcept;
     bool changeName(const Engine& engine, bool, const char*, float) noexcept;
     void bunnyHop(UserCmd*) noexcept;
     void fakeBan(const Engine& engine, bool = false) noexcept;
@@ -66,22 +58,15 @@ public:
     void fixMovement(UserCmd* cmd, float yaw) noexcept;
     void antiAfkKick(UserCmd* cmd) noexcept;
     void fixAnimationLOD(const Engine& engine, csgo::FrameStage stage) noexcept;
-    void autoPistol(UserCmd* cmd) noexcept;
     void chokePackets(const Engine& engine, bool& sendPacket) noexcept;
-    void autoReload(UserCmd* cmd) noexcept;
     void revealRanks(UserCmd* cmd) noexcept;
-    void autoStrafe(UserCmd* cmd) noexcept;
-    void removeCrouchCooldown(UserCmd* cmd) noexcept;
-    void moonwalk(UserCmd* cmd) noexcept;
     void playHitSound(const Engine& engine, const GameEvent& event) noexcept;
     void killSound(const Engine& engine, const GameEvent& event) noexcept;
     void purchaseList(const Engine& engine, const GameEvent* event = nullptr) noexcept;
     void oppositeHandKnife(csgo::FrameStage stage) noexcept;
     void runReportbot(const Engine& engine) noexcept;
     void resetReportbot() noexcept;
-    void preserveKillfeed(bool roundStart = false) noexcept;
     void voteRevealer(const GameEvent& event) noexcept;
-    void drawOffscreenEnemies(const Engine& engine, ImDrawList* drawList) noexcept;
     void autoAccept(const char* soundEntry) noexcept;
 
     bool isPlayingDemoHook(ReturnAddress returnAddress, std::uintptr_t frameAddress) const;
@@ -94,8 +79,8 @@ public:
 
     // GUI
     void menuBarItem() noexcept;
-    void tabItem(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces) noexcept;
-    void drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, const EngineInterfaces& engineInterfaces, bool contentOnly) noexcept;
+    void tabItem(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, const EngineInterfaces& engineInterfaces) noexcept;
+    void drawGUI(Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger, const EngineInterfaces& engineInterfaces, bool contentOnly) noexcept;
 
     // Config
     json toJson() noexcept;

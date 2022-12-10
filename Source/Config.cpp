@@ -22,7 +22,6 @@
 
 #include "Config.h"
 #include "Hacks/Backtrack.h"
-#include "Hacks/Glow.h"
 #include "InventoryChanger/InventoryChanger.h"
 #include "InventoryChanger/InventoryConfig.h"
 #include "Hacks/Sound.h"
@@ -82,11 +81,11 @@ int CALLBACK fontCallback(const LOGFONTW* lpelfe, const TEXTMETRICW*, DWORD, LPA
     return path;
 }
 
-Config::Config(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept : path{ buildConfigsFolderPath() }
+Config::Config(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept : path{ buildConfigsFolderPath() }
 {
     listConfigs();
 
-    load(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, u8"default.json", false);
+    load(misc, inventoryChanger, backtrack, visuals, interfaces, memory, u8"default.json", false);
 
 #if IS_WIN32()
     LOGFONTW logfont;
@@ -216,20 +215,6 @@ static void from_json(const json& j, Config::Aimbot& a)
     read(j, "Between shots", a.betweenShots);
 }
 
-static void from_json(const json& j, Config::Triggerbot& t)
-{
-    read(j, "Enabled", t.enabled);
-    read(j, "Friendly fire", t.friendlyFire);
-    read(j, "Scoped only", t.scopedOnly);
-    read(j, "Ignore flash", t.ignoreFlash);
-    read(j, "Ignore smoke", t.ignoreSmoke);
-    read(j, "Hitgroup", t.hitgroup);
-    read(j, "Shot delay", t.shotDelay);
-    read(j, "Min damage", t.minDamage);
-    read(j, "Killshot", t.killshot);
-    read(j, "Burst Time", t.burstTime);
-}
-
 static void from_json(const json& j, Config::Chams::Material& m)
 {
     from_json(j, static_cast<Color4&>(m));
@@ -292,12 +277,12 @@ static void from_json(const json& j, Config::Style& s)
     }
 }
 
-void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, size_t id, bool incremental) noexcept
+void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, size_t id, bool incremental) noexcept
 {
-    load(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, configs[id].c_str(), incremental);
+    load(misc, inventoryChanger, backtrack, visuals, interfaces, memory, configs[id].c_str(), incremental);
 }
 
-void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t* name, bool incremental) noexcept
+void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t* name, bool incremental) noexcept
 {
     json j;
 
@@ -310,15 +295,12 @@ void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChan
     }
 
     if (!incremental)
-        reset(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory);
+        reset(misc, inventoryChanger, backtrack, visuals, interfaces, memory);
 
     read(j, "Aimbot", aimbot);
     read(j, "Aimbot On key", aimbotOnKey);
     read(j, "Aimbot Key", aimbotKey);
     read(j, "Aimbot Key mode", aimbotKeyMode);
-
-    read(j, "Triggerbot", triggerbot);
-    read(j, "Triggerbot Key", triggerbotHoldKey);
 
     read(j, "Chams", chams);
     read(j["Chams"], "Toggle Key", chamsToggleKey);
@@ -333,7 +315,6 @@ void Config::load(Misc& misc, inventory_changer::InventoryChanger& inventoryChan
 
     LoadConfigurator backtrackConfigurator{ j["Backtrack"] };
     backtrack.configure(backtrackConfigurator);
-    glow.fromJson(j["Glow"]);
     visuals.fromJson(j["Visuals"]);
     fromJson(j["Inventory Changer"], inventoryChanger);
     Sound::fromJson(j["Sound"]);
@@ -449,20 +430,6 @@ static void to_json(json& j, const Config::Aimbot& o, const Config::Aimbot& dumm
     WRITE("Between shots", betweenShots);
 }
 
-static void to_json(json& j, const Config::Triggerbot& o, const Config::Triggerbot& dummy = {})
-{
-    WRITE("Enabled", enabled);
-    WRITE("Friendly fire", friendlyFire);
-    WRITE("Scoped only", scopedOnly);
-    WRITE("Ignore flash", ignoreFlash);
-    WRITE("Ignore smoke", ignoreSmoke);
-    WRITE("Hitgroup", hitgroup);
-    WRITE("Shot delay", shotDelay);
-    WRITE("Min damage", minDamage);
-    WRITE("Killshot", killshot);
-    WRITE("Burst Time", burstTime);
-}
-
 static void to_json(json& j, const Config::Chams::Material& o)
 {
     const Config::Chams::Material dummy;
@@ -529,7 +496,7 @@ void removeEmptyObjects(json& j) noexcept
     }
 }
 
-void Config::save(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, size_t id) const noexcept
+void Config::save(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, size_t id) const noexcept
 {
     json j;
 
@@ -538,13 +505,9 @@ void Config::save(Misc& misc, inventory_changer::InventoryChanger& inventoryChan
     to_json(j["Aimbot Key"], aimbotKey, {});
     j["Aimbot Key mode"] = aimbotKeyMode;
 
-    j["Triggerbot"] = triggerbot;
-    to_json(j["Triggerbot Key"], triggerbotHoldKey, {});
-
     SaveConfigurator backtrackConfigurator;
     backtrack.configure(backtrackConfigurator);
     j["Backtrack"] = backtrackConfigurator.getJson();
-    j["Glow"] = glow.toJson();
     j["Chams"] = chams;
     to_json(j["Chams"]["Toggle Key"], chamsToggleKey, {});
     to_json(j["Chams"]["Hold Key"], chamsHoldKey, {});
@@ -562,11 +525,11 @@ void Config::save(Misc& misc, inventory_changer::InventoryChanger& inventoryChan
         out << std::setw(2) << j;
 }
 
-void Config::add(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t* name) noexcept
+void Config::add(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t* name) noexcept
 {
     if (*name && std::ranges::find(configs, name) == configs.cend()) {
         configs.emplace_back(name);
-        save(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, configs.size() - 1);
+        save(misc, inventoryChanger, backtrack, visuals, interfaces, memory, configs.size() - 1);
     }
 }
 
@@ -584,17 +547,15 @@ void Config::rename(size_t item, std::u8string_view newName) noexcept
     configs[item] = newName;
 }
 
-void Config::reset(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept
+void Config::reset(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept
 {
     aimbot = { };
-    triggerbot = { };
     chams = { };
     streamProofESP = { };
     style = { };
 
     ResetConfigurator configurator;
     backtrack.configure(configurator);
-    glow.resetConfig();
     visuals.resetConfig();
     inventoryChanger.reset(interfaces, memory);
     Sound::resetConfig();

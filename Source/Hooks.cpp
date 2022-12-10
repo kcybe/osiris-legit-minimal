@@ -38,10 +38,8 @@
 #include "Hacks/Chams.h"
 #include "Hacks/EnginePrediction.h"
 #include "Hacks/StreamProofESP.h"
-#include "Hacks/Glow.h"
 #include "Hacks/Misc.h"
 #include "Hacks/Sound.h"
-#include "Hacks/Triggerbot.h"
 #include "Hacks/Visuals.h"
 
 #include "InventoryChanger/InventoryChanger.h"
@@ -181,7 +179,7 @@ void Hooks::install(csgo::pod::Client* clientInterface, const EngineInterfaces& 
 #endif
 }
 
-void Hooks::uninstall(Misc& misc, Glow& glow, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger) noexcept
+void Hooks::uninstall(Misc& misc, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Visuals& visuals, inventory_changer::InventoryChanger& inventoryChanger) noexcept
 {
     misc.updateEventListeners(engineInterfaces, true);
     visuals.updateEventListeners(true);
@@ -208,7 +206,6 @@ void Hooks::uninstall(Misc& misc, Glow& glow, const EngineInterfaces& engineInte
 
     Netvars::restore();
 
-    glow.clearCustomObjects(memory);
     inventoryChanger.reset(interfaces, memory);
 
 #if IS_WIN32()

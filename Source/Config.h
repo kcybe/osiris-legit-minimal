@@ -18,20 +18,19 @@
 
 struct ImFont;
 class Backtrack;
-class Glow;
 class Visuals;
 class Misc;
 
 class Config {
 public:
-    Config(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept;
-    void load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, std::size_t, bool incremental) noexcept;
-    void load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t* name, bool incremental) noexcept;
-    void save(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, std::size_t) const noexcept;
-    void add(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t*) noexcept;
+    Config(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept;
+    void load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, std::size_t, bool incremental) noexcept;
+    void load(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t* name, bool incremental) noexcept;
+    void save(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, std::size_t) const noexcept;
+    void add(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, const char8_t*) noexcept;
     void remove(std::size_t) noexcept;
     void rename(std::size_t, std::u8string_view newName) noexcept;
-    void reset(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept;
+    void reset(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory) noexcept;
     void listConfigs() noexcept;
     void createConfigDir() const noexcept;
     void openConfigDir() const noexcept;
@@ -65,21 +64,6 @@ public:
     bool aimbotOnKey{ false };
     KeyBind aimbotKey;
     int aimbotKeyMode{ 0 };
-
-    struct Triggerbot {
-        bool enabled = false;
-        bool friendlyFire = false;
-        bool scopedOnly = true;
-        bool ignoreFlash = false;
-        bool ignoreSmoke = false;
-        bool killshot = false;
-        int hitgroup = 0;
-        int shotDelay = 0;
-        int minDamage = 1;
-        float burstTime = 0.0f;
-    };
-    std::array<Triggerbot, 40> triggerbot;
-    KeyBind triggerbotHoldKey;
 
     struct Chams {
         struct Material : Color4 {

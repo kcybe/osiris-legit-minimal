@@ -113,12 +113,6 @@
     <ClCompile Include="Osiris.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Hacks\Glow.cpp">
-      <Filter>Hacks</Filter>
-    </ClCompile>
-    <ClCompile Include="Hacks\Triggerbot.cpp">
-      <Filter>Hacks</Filter>
-    </ClCompile>
     <ClCompile Include="Hacks\Chams.cpp">
       <Filter>Hacks</Filter>
     </ClCompile>
@@ -372,12 +366,6 @@
     </ClInclude>
     <ClInclude Include="SDK\Cvar.h">
       <Filter>SDK</Filter>
-    </ClInclude>
-    <ClInclude Include="Hacks\Glow.h">
-      <Filter>Hacks</Filter>
-    </ClInclude>
-    <ClInclude Include="Hacks\Triggerbot.h">
-      <Filter>Hacks</Filter>
     </ClInclude>
     <ClInclude Include="SDK\ModelRender.h">
       <Filter>SDK</Filter>

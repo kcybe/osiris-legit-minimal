@@ -15,7 +15,6 @@
 
 #include "Hacks/Aimbot.h"
 #include "Hacks/Backtrack.h"
-#include "Hacks/Glow.h"
 #include "Hacks/Visuals.h"
 #include "Interfaces/ClientInterfaces.h"
 #include "Interfaces/EngineInterfaces.h"

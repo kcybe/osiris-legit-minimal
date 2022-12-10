@@ -26,7 +26,6 @@
 #include "Helpers.h"
 #include "SDK/InputSystem.h"
 #include "Hacks/Visuals.h"
-#include "Hacks/Glow.h"
 #include "Hacks/Backtrack.h"
 #include "Hacks/Sound.h"
 #include "Hacks/StreamProofESP.h"
@@ -93,24 +92,22 @@ GUI::GUI() noexcept
     addFontFromVFONT("csgo/panorama/fonts/notosanssc-regular.vfont", 17.0f, io.Fonts->GetGlyphRangesChineseFull(), true);
 }
 
-void GUI::render(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Config& config) noexcept
+void GUI::render(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Config& config) noexcept
 {
     if (!config.style.menuStyle) {
-        renderMenuBar(misc, inventoryChanger, glow, backtrack, visuals);
+        renderMenuBar(misc, inventoryChanger, backtrack, visuals);
         renderAimbotWindow(config);
-        renderTriggerbotWindow(config);
         backtrack.drawGUI(false);
-        glow.drawGUI(false);
         renderChamsWindow(config);
         StreamProofESP::drawGUI(config, false);
         visuals.drawGUI(false);
         inventoryChanger.drawGUI(interfaces, memory, false);
         Sound::drawGUI(false);
         renderStyleWindow(config);
-        misc.drawGUI(visuals, inventoryChanger, glow, engineInterfaces, false);
-        renderConfigWindow(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, config);
+        misc.drawGUI(visuals, inventoryChanger, engineInterfaces, false);
+        renderConfigWindow(misc, inventoryChanger, backtrack, visuals, interfaces, memory, config);
     } else {
-        renderGuiStyle2(misc, inventoryChanger, glow, backtrack, visuals, engineInterfaces, clientInterfaces, interfaces, memory, config);
+        renderGuiStyle2(misc, inventoryChanger, backtrack, visuals, engineInterfaces, clientInterfaces, interfaces, memory, config);
     }
 }
 
@@ -144,13 +141,11 @@ static void menuBarItem(const char* name, bool& enabled) noexcept
     }
 }
 
-void GUI::renderMenuBar(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals) noexcept
+void GUI::renderMenuBar(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals) noexcept
 {
     if (ImGui::BeginMainMenuBar()) {
         menuBarItem("Aimbot", window.aimbot);
-        menuBarItem("Triggerbot", window.triggerbot);
         backtrack.menuBarItem();
-        glow.menuBarItem();
         menuBarItem("Chams", window.chams);
         StreamProofESP::menuBarItem();
         visuals.menuBarItem();
@@ -300,127 +295,6 @@ void GUI::renderAimbotWindow(Config& config, bool contentOnly) noexcept
         ImGui::End();
 }
 
-void GUI::renderTriggerbotWindow(Config& config, bool contentOnly) noexcept
-{
-    if (!contentOnly) {
-        if (!window.triggerbot)
-            return;
-        ImGui::SetNextWindowSize({ 0.0f, 0.0f });
-        ImGui::Begin("Triggerbot", &window.triggerbot, windowFlags);
-    }
-    static int currentCategory{ 0 };
-    ImGui::PushItemWidth(110.0f);
-    ImGui::PushID(0);
-    ImGui::Combo("", &currentCategory, "All\0Pistols\0Heavy\0SMG\0Rifles\0Zeus x27\0");
-    ImGui::PopID();
-    ImGui::SameLine();
-    static int currentWeapon{ 0 };
-    ImGui::PushID(1);
-    switch (currentCategory) {
-    case 0:
-        currentWeapon = 0;
-        ImGui::NewLine();
-        break;
-    case 5:
-        currentWeapon = 39;
-        ImGui::NewLine();
-        break;
-
-    case 1: {
-        static int currentPistol{ 0 };
-        static constexpr const char* pistols[]{ "All", "Glock-18", "P2000", "USP-S", "Dual Berettas", "P250", "Tec-9", "Five-Seven", "CZ-75", "Desert Eagle", "Revolver" };
-
-        ImGui::Combo("", &currentPistol, [](void* config, int idx, const char** out_text) {
-            if (static_cast<Config*>(config)->triggerbot[idx ? idx : 35].enabled) {
-                static std::string name;
-                name = pistols[idx];
-                *out_text = name.append(" *").c_str();
-            } else {
-                *out_text = pistols[idx];
-            }
-            return true;
-            }, &config, IM_ARRAYSIZE(pistols));
-
-        currentWeapon = currentPistol ? currentPistol : 35;
-        break;
-    }
-    case 2: {
-        static int currentHeavy{ 0 };
-        static constexpr const char* heavies[]{ "All", "Nova", "XM1014", "Sawed-off", "MAG-7", "M249", "Negev" };
-
-        ImGui::Combo("", &currentHeavy, [](void* config, int idx, const char** out_text) {
-            if (static_cast<Config*>(config)->triggerbot[idx ? idx + 10 : 36].enabled) {
-                static std::string name;
-                name = heavies[idx];
-                *out_text = name.append(" *").c_str();
-            } else {
-                *out_text = heavies[idx];
-            }
-            return true;
-            }, &config, IM_ARRAYSIZE(heavies));
-
-        currentWeapon = currentHeavy ? currentHeavy + 10 : 36;
-        break;
-    }
-    case 3: {
-        static int currentSmg{ 0 };
-        static constexpr const char* smgs[]{ "All", "Mac-10", "MP9", "MP7", "MP5-SD", "UMP-45", "P90", "PP-Bizon" };
-
-        ImGui::Combo("", &currentSmg, [](void* config, int idx, const char** out_text) {
-            if (static_cast<Config*>(config)->triggerbot[idx ? idx + 16 : 37].enabled) {
-                static std::string name;
-                name = smgs[idx];
-                *out_text = name.append(" *").c_str();
-            } else {
-                *out_text = smgs[idx];
-            }
-            return true;
-            }, &config, IM_ARRAYSIZE(smgs));
-
-        currentWeapon = currentSmg ? currentSmg + 16 : 37;
-        break;
-    }
-    case 4: {
-        static int currentRifle{ 0 };
-        static constexpr const char* rifles[]{ "All", "Galil AR", "Famas", "AK-47", "M4A4", "M4A1-S", "SSG-08", "SG-553", "AUG", "AWP", "G3SG1", "SCAR-20" };
-
-        ImGui::Combo("", &currentRifle, [](void* config, int idx, const char** out_text) {
-            if (static_cast<Config*>(config)->triggerbot[idx ? idx + 23 : 38].enabled) {
-                static std::string name;
-                name = rifles[idx];
-                *out_text = name.append(" *").c_str();
-            } else {
-                *out_text = rifles[idx];
-            }
-            return true;
-            }, &config, IM_ARRAYSIZE(rifles));
-
-        currentWeapon = currentRifle ? currentRifle + 23 : 38;
-        break;
-    }
-    }
-    ImGui::PopID();
-    ImGui::SameLine();
-    ImGui::Checkbox("Enabled", &config.triggerbot[currentWeapon].enabled);
-    ImGui::Separator();
-    ImGui::hotkey("Hold Key", config.triggerbotHoldKey);
-    ImGui::Checkbox("Friendly fire", &config.triggerbot[currentWeapon].friendlyFire);
-    ImGui::Checkbox("Scoped only", &config.triggerbot[currentWeapon].scopedOnly);
-    ImGui::Checkbox("Ignore flash", &config.triggerbot[currentWeapon].ignoreFlash);
-    ImGui::Checkbox("Ignore smoke", &config.triggerbot[currentWeapon].ignoreSmoke);
-    ImGui::SetNextItemWidth(85.0f);
-    ImGui::Combo("Hitgroup", &config.triggerbot[currentWeapon].hitgroup, "All\0Head\0Chest\0Stomach\0Left arm\0Right arm\0Left leg\0Right leg\0");
-    ImGui::PushItemWidth(220.0f);
-    ImGui::SliderInt("Shot delay", &config.triggerbot[currentWeapon].shotDelay, 0, 250, "%d ms");
-    ImGui::InputInt("Min damage", &config.triggerbot[currentWeapon].minDamage);
-    config.triggerbot[currentWeapon].minDamage = std::clamp(config.triggerbot[currentWeapon].minDamage, 0, 250);
-    ImGui::Checkbox("Killshot", &config.triggerbot[currentWeapon].killshot);
-    ImGui::SliderFloat("Burst Time", &config.triggerbot[currentWeapon].burstTime, 0.0f, 0.5f, "%.3f s");
-
-    if (!contentOnly)
-        ImGui::End();
-}
-
 void GUI::renderChamsWindow(Config& config, bool contentOnly) noexcept
 {
     if (!contentOnly) {
@@ -472,7 +346,7 @@ void GUI::renderChamsWindow(Config& config, bool contentOnly) noexcept
     ImGui::Separator();
     ImGui::Checkbox("Health based", &chams.healthBased);
     ImGui::Checkbox("Blinking", &chams.blinking);
-    ImGui::Combo("Material", &chams.material, "Normal\0Flat\0Animated\0Platinum\0Glass\0Chrome\0Crystal\0Silver\0Gold\0Plastic\0Glow\0Pearlescent\0Metallic\0");
+    ImGui::Combo("Material", &chams.material, "Normal\0Flat\0Animated\0Platinum\0Glass\0Chrome\0Crystal\0Silver\0Gold\0Plastic\0Pearlescent\0Metallic\0");
     ImGui::Checkbox("Wireframe", &chams.wireframe);
     ImGui::Checkbox("Cover", &chams.cover);
     ImGui::Checkbox("Ignore-Z", &chams.ignorez);
@@ -512,7 +386,7 @@ void GUI::renderStyleWindow(Config& config, bool contentOnly) noexcept
         ImGui::End();
 }
 
-void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, Config& config, bool contentOnly) noexcept
+void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const OtherInterfaces& interfaces, const Memory& memory, Config& config, bool contentOnly) noexcept
 {
     if (!contentOnly) {
         if (!window.config)
@@ -569,13 +443,13 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
             config.openConfigDir();
 
         if (ImGui::Button("Create config", { 100.0f, 25.0f }))
-            config.add(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, buffer.c_str());
+            config.add(misc, inventoryChanger, backtrack, visuals, interfaces, memory, buffer.c_str());
 
         if (ImGui::Button("Reset config", { 100.0f, 25.0f }))
             ImGui::OpenPopup("Config to reset");
 
         if (ImGui::BeginPopup("Config to reset")) {
-            static constexpr const char* names[]{ "Whole", "Aimbot", "Triggerbot", "Backtrack", "Glow", "Chams", "ESP", "Visuals", "Inventory Changer", "Sound", "Style", "Misc" };
+            static constexpr const char* names[]{ "Whole", "Aimbot", "Backtrack", "Chams", "ESP", "Visuals", "Inventory Changer", "Sound", "Style", "Misc" };
             for (int i = 0; i < IM_ARRAYSIZE(names); i++) {
                 if (i == 1) ImGui::Separator();
 
@@ -583,18 +457,16 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
 
                 if (ImGui::Selectable(names[i])) {
                     switch (i) {
-                    case 0: config.reset(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory); updateColors(config); misc.updateClanTag(true); inventoryChanger.scheduleHudUpdate(interfaces); break;
+                    case 0: config.reset(misc, inventoryChanger, backtrack, visuals, interfaces, memory); updateColors(config); misc.updateClanTag(true); inventoryChanger.scheduleHudUpdate(interfaces); break;
                     case 1: config.aimbot = { }; break;
-                    case 2: config.triggerbot = { }; break;
-                    case 3: backtrack.configure(configurator); break;
-                    case 4: glow.resetConfig(); break;
-                    case 5: config.chams = { }; break;
-                    case 6: config.streamProofESP = { }; break;
-                    case 7: visuals.resetConfig(); break;
-                    case 8: inventoryChanger.reset(interfaces, memory); inventoryChanger.scheduleHudUpdate(interfaces); break;
-                    case 9: Sound::resetConfig(); break;
-                    case 10: config.style = { }; updateColors(config); break;
-                    case 11: misc.resetConfig(); misc.updateClanTag(true); break;
+                    case 2: backtrack.configure(configurator); break;
+                    case 3: config.chams = { }; break;
+                    case 4: config.streamProofESP = { }; break;
+                    case 5: visuals.resetConfig(); break;
+                    case 6: inventoryChanger.reset(interfaces, memory); inventoryChanger.scheduleHudUpdate(interfaces); break;
+                    case 7: Sound::resetConfig(); break;
+                    case 8: config.style = { }; updateColors(config); break;
+                    case 9: misc.resetConfig(); misc.updateClanTag(true); break;
                     }
                 }
             }
@@ -602,13 +474,13 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
         }
         if (currentConfig != -1) {
             if (ImGui::Button("Load selected", { 100.0f, 25.0f })) {
-                config.load(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, currentConfig, incrementalLoad);
+                config.load(misc, inventoryChanger, backtrack, visuals, interfaces, memory, currentConfig, incrementalLoad);
                 updateColors(config);
                 inventoryChanger.scheduleHudUpdate(interfaces);
                 misc.updateClanTag(true);
             }
             if (ImGui::Button("Save selected", { 100.0f, 25.0f }))
-                config.save(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, currentConfig);
+                config.save(misc, inventoryChanger, backtrack, visuals, interfaces, memory, currentConfig);
             if (ImGui::Button("Delete selected", { 100.0f, 25.0f })) {
                 config.remove(currentConfig);
 
@@ -623,7 +495,7 @@ void GUI::renderConfigWindow(Misc& misc, inventory_changer::InventoryChanger& in
             ImGui::End();
 }
 
-void GUI::renderGuiStyle2(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Glow& glow, Backtrack& backtrack, Visuals& visuals, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Config& config) noexcept
+void GUI::renderGuiStyle2(Misc& misc, inventory_changer::InventoryChanger& inventoryChanger, Backtrack& backtrack, Visuals& visuals, const EngineInterfaces& engineInterfaces, const ClientInterfaces& clientInterfaces, const OtherInterfaces& interfaces, const Memory& memory, Config& config) noexcept
 {
     ImGui::Begin("Osiris", nullptr, windowFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
 
@@ -632,12 +504,7 @@ void GUI::renderGuiStyle2(Misc& misc, inventory_changer::InventoryChanger& inven
             renderAimbotWindow(config, true);
             ImGui::EndTabItem();
         }
-        if (ImGui::BeginTabItem("Triggerbot")) {
-            renderTriggerbotWindow(config, true);
-            ImGui::EndTabItem();
-        }
         backtrack.tabItem();
-        glow.tabItem();
         if (ImGui::BeginTabItem("Chams")) {
             renderChamsWindow(config, true);
             ImGui::EndTabItem();
@@ -650,9 +517,9 @@ void GUI::renderGuiStyle2(Misc& misc, inventory_changer::InventoryChanger& inven
             renderStyleWindow(config, true);
             ImGui::EndTabItem();
         }
-        misc.tabItem(visuals, inventoryChanger, glow, engineInterfaces);
+        misc.tabItem(visuals, inventoryChanger, engineInterfaces);
         if (ImGui::BeginTabItem("Config")) {
-            renderConfigWindow(misc, inventoryChanger, glow, backtrack, visuals, interfaces, memory, config, true);
+            renderConfigWindow(misc, inventoryChanger, backtrack, visuals, interfaces, memory, config, true);
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();

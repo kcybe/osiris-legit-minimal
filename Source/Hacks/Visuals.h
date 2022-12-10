@@ -31,7 +31,6 @@ public:
     }
 
     bool isZoomOn() noexcept;
-    bool isDeagleSpinnerOn() noexcept;
     bool shouldRemoveFog() noexcept;
     float viewModelFov() noexcept;
     float fov() noexcept;
@@ -48,8 +47,6 @@ public:
     void remove3dSky() noexcept;
     void removeShadows() noexcept;
     void applyZoom(csgo::FrameStage stage) noexcept;
-    void applyScreenEffects() noexcept;
-    void hitEffect(const GameEvent* event = nullptr) noexcept;
     void hitMarker(const GameEvent* event, ImDrawList* drawList = nullptr) noexcept;
     void disablePostProcessing(csgo::FrameStage stage) noexcept;
     void reduceFlashEffect() noexcept;
@@ -58,7 +55,6 @@ public:
     bool removeWeapons(const char* modelName) noexcept;
     void skybox(csgo::FrameStage stage) noexcept;
     void bulletTracer(const GameEvent& event) noexcept;
-    void drawMolotovHull(ImDrawList* drawList) noexcept;
 
     void setDrawColorHook(ReturnAddress hookReturnAddress, int& alpha) const noexcept;
     void updateColorCorrectionWeightsHook() const noexcept;

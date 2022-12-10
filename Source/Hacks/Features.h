@@ -2,7 +2,6 @@
 
 #include "Aimbot.h"
 #include "Backtrack.h"
-#include "Glow.h"
 #include "Visuals.h"
 #include "Misc.h"
 #include <InventoryChanger/InventoryChanger.h>
@@ -12,7 +11,6 @@
 struct Features {
     Aimbot aimbot;
     Backtrack backtrack;
-    Glow glow;
     Visuals visuals;
     inventory_changer::InventoryChanger inventoryChanger;
     Misc misc;
